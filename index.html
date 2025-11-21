@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>InFocus AR Hologram</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="ui">
+    <header>
+      <div class="badge">AR</div>
+      <div>
+        <p class="eyebrow">InFocus 화면을 카메라 속으로</p>
+        <h1>사이트를 <span class="accent">홀로그램</span>처럼 띄워보세요</h1>
+      </div>
+    </header>
+    <p class="copy">
+      AR 버튼을 눌러 바닥에 조준 후 탭하면 InFocus 페이지가 홀로그램 패널로 배치됩니다.
+      깔끔하게 보기 위해 HTTPS 환경(예: 모바일 크롬, 사파리)에서 실행하세요.
+    </p>
+    <div class="actions">
+      <button id="start-ar">AR 시작</button>
+      <button id="open-site" class="ghost">웹사이트 열기</button>
+    </div>
+  </div>
+
+  <div id="site-window" class="hidden">
+    <div class="window-chrome">
+      <div class="pulse"></div>
+      <span>InFocus 프리뷰 (실제 사이트)</span>
+      <button id="close-window" aria-label="닫기">×</button>
+    </div>
+    <iframe id="site-frame" title="InFocus 미리보기" allow="accelerometer; gyroscope; magnetometer; xr-spatial-tracking; camera; fullscreen" loading="lazy"></iframe>
+  </div>
+
+  <div id="unsupported" class="hidden">
+    WebXR AR을 지원하지 않는 기기입니다. 최신 Chrome/Edge(Android) 또는 Safari 17+(iOS)에서 HTTPS로 열어주세요.
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

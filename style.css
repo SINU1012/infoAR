@@ -1,0 +1,197 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+  --bg: #04070b;
+  --panel: rgba(12, 17, 24, 0.7);
+  --border: rgba(0, 210, 255, 0.35);
+  --text: #d9e6ff;
+  --muted: #8aa2c3;
+  --accent: #5af0ff;
+  --accent-2: #7af0c9;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Space Grotesk", "Pretendard", "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 20%, rgba(90, 240, 255, 0.15), transparent 35%),
+              radial-gradient(circle at 80% 10%, rgba(122, 240, 201, 0.14), transparent 36%),
+              linear-gradient(135deg, #05090f, #0a1018 40%, #05090f);
+  overflow: hidden;
+}
+
+#ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  padding: clamp(16px, 3vw, 28px);
+  display: grid;
+  gap: 14px;
+  max-width: 720px;
+}
+
+header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.badge {
+  background: linear-gradient(180deg, rgba(90, 240, 255, 0.8), rgba(122, 240, 201, 0.8));
+  color: #04111a;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 12px;
+  letter-spacing: 0.08em;
+  font-size: 13px;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+h1 {
+  margin: 2px 0 0;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.copy {
+  margin: 0;
+  color: var(--muted);
+  max-width: 50ch;
+  line-height: 1.5;
+}
+
+.actions {
+  pointer-events: auto;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: linear-gradient(90deg, rgba(90, 240, 255, 0.12), rgba(122, 240, 201, 0.1));
+  color: var(--text);
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  backdrop-filter: blur(12px);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(90, 240, 255, 0.7);
+  box-shadow: 0 10px 30px rgba(0, 200, 255, 0.08);
+}
+
+.ghost {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#site-window {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 520px);
+  height: min(60vh, 420px);
+  background: #05090f;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 32px rgba(90, 240, 255, 0.25);
+  pointer-events: auto;
+  z-index: 10;
+}
+
+.window-chrome {
+  height: 46px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  background: linear-gradient(90deg, rgba(90, 240, 255, 0.1), rgba(122, 240, 201, 0.07));
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.window-chrome .pulse {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(90, 240, 255, 0.9);
+  animation: pulse 1.8s ease-in-out infinite;
+}
+
+.window-chrome button {
+  border-radius: 10px;
+  padding: 6px 10px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+iframe {
+  width: 100%;
+  height: calc(100% - 46px);
+  border: none;
+}
+
+.hidden {
+  display: none;
+}
+
+#unsupported {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 16px;
+  background: rgba(255, 41, 87, 0.18);
+  border: 1px solid rgba(255, 84, 119, 0.5);
+  color: #ffd7e0;
+  font-size: 14px;
+  border-radius: 12px;
+  max-width: 90vw;
+  text-align: center;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@media (max-width: 600px) {
+  .copy { max-width: none; }
+  h1 { font-size: clamp(22px, 7vw, 30px); }
+  #ui { gap: 10px; }
+  #site-window {
+    width: 88vw;
+    height: 55vh;
+  }
+}
