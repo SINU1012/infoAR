@@ -8,26 +8,9 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="ui">
-    <header>
-      <div class="badge">AR</div>
-      <div>
-        <p class="eyebrow">InFocus 화면을 카메라 속으로</p>
-        <h1>주소로 들어오면 즉시 카메라에 <span class="accent">홀로그램</span> 표시</h1>
-      </div>
-    </header>
-    <p class="copy">
-      페이지를 열면 자동으로 AR 세션을 시도합니다. 카메라 권한을 허용하면 바닥을 인식한 후 InFocus 홈페이지가 홀로그램 패널로 떠오릅니다.
-      브라우저가 사용자 제스처를 요구할 수 있으니, 요청 시 화면을 한 번 탭해 주세요.
-    </p>
-    <div id="status-pill">AR 준비 중...</div>
-  </div>
-
   <div id="site-window" class="hidden">
     <iframe id="site-frame" title="InFocus 미리보기" allow="accelerometer; gyroscope; magnetometer; xr-spatial-tracking; camera; fullscreen" loading="lazy"></iframe>
   </div>
-
-  <div id="unsupported" class="hidden"></div>
 
   <script type="module" src="main.js"></script>
 </body>

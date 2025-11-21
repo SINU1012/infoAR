@@ -7,12 +7,9 @@ const HOLOGRAM_SIZE = { width: 1.2, height: 0.72 };
 const ui = {
   siteWindow: document.getElementById("site-window"),
   siteFrame: document.getElementById("site-frame"),
-  unsupported: document.getElementById("unsupported"),
-  status: document.getElementById("status-pill"),
 };
 
 ui.siteFrame.src = TARGET_URL.replace("http://", "https://");
-setStatus("AR 준비 중...");
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -63,8 +60,14 @@ const overlayEl = ui.siteWindow;
 
 window.addEventListener("resize", onWindowResize);
 
-checkSupport();
-attemptAutoStart();
+(async () => {
+  const supported = await checkSupport();
+  if (supported) {
+    attemptAutoStart();
+  } else {
+    fallbackToInlineSite();
+  }
+})();
 
 async function startAR() {
   if (!navigator.xr) {
@@ -87,25 +90,21 @@ async function startAR() {
   } catch (err) {
     console.error("AR 세션 시작 실패", err);
     if (err && typeof err.message === "string" && err.message.toLowerCase().includes("gesture")) {
-      state.needsGesture = true;
-      setStatus("화면을 한 번 탭해 카메라를 켜주세요.");
       waitForUserGesture();
       return false;
     }
-    showUnsupported("AR 세션을 시작할 수 없습니다. HTTPS 환경과 호환 기기를 확인하세요.");
+    fallbackToInlineSite();
     return false;
   }
 }
 
 function attemptAutoStart() {
-  setStatus("카메라 권한 요청 중...");
   startAR();
 }
 
 function waitForUserGesture() {
   const handler = () => {
     window.removeEventListener("pointerdown", handler);
-    setStatus("AR 시작 중...");
     startAR();
   };
   window.addEventListener("pointerdown", handler, { once: true });
@@ -129,7 +128,6 @@ async function onSessionStarted(session) {
   state.hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   overlayEl.classList.add("hidden");
-  setStatus("바닥을 인식 중... 기기 앞쪽을 천천히 움직여 주세요.");
   renderer.setAnimationLoop(onXRFrame);
 }
 
@@ -145,7 +143,6 @@ function onSessionEnded() {
     state.hologram = null;
   }
   renderer.setAnimationLoop(null);
-  setStatus("AR 세션이 종료되었습니다. 다시 시작하려면 화면을 탭하세요.");
   state.autoplacePending = true;
   waitForUserGesture();
 }
@@ -199,7 +196,6 @@ function placeHologramFromReticle() {
   );
   state.hologram.userData.baseY = state.hologram.position.y;
   showSiteWindow();
-  setStatus("홈페이지를 둘러보세요. 패널을 탭하면 위치를 다시 잡습니다.");
 }
 
 function animateHologram(time = 0) {
@@ -306,19 +302,6 @@ function makeLabelTexture() {
   ctx.lineWidth = 4;
   ctx.strokeRect(32, 32, canvas.width - 64, canvas.height - 64);
 
-  ctx.fillStyle = "#5bf0ff";
-  ctx.font = "bold 70px 'Space Grotesk', 'Pretendard', sans-serif";
-  ctx.fillText("InFocus AR Window", 60, 130);
-
-  ctx.fillStyle = "#b6c7e0";
-  ctx.font = "40px 'Space Grotesk', 'Pretendard', sans-serif";
-  const text = "실제 사이트가 여기에 투사됩니다. 배치 후 패널을 터치해서 웹을 탐색하세요.";
-  wrapText(ctx, text, 60, 210, canvas.width - 120, 48);
-
-  ctx.fillStyle = "#89f0c9";
-  ctx.font = "32px 'Space Grotesk', 'Pretendard', sans-serif";
-  ctx.fillText("Tip: 패널을 다시 탭하면 위치를 옮길 수 있습니다.", 60, 300);
-
   ctx.strokeStyle = "rgba(90,240,255,0.35)";
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -326,9 +309,19 @@ function makeLabelTexture() {
   ctx.lineTo(canvas.width - 60, canvas.height - 140);
   ctx.stroke();
 
-  ctx.font = "30px 'Space Grotesk', 'Pretendard', sans-serif";
-  ctx.fillStyle = "#c9d7ed";
-  ctx.fillText("AR이 활성화되면 상단 패널에 실제 사이트가 동기화됩니다.", 60, canvas.height - 90);
+  ctx.strokeStyle = "rgba(122,240,201,0.35)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(80, 150);
+  ctx.lineTo(canvas.width - 80, 200);
+  ctx.lineTo(canvas.width - 120, 260);
+  ctx.lineTo(120, 220);
+  ctx.closePath();
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(90,240,255,0.22)";
+  ctx.fillRect(70, 90, canvas.width - 140, 30);
+  ctx.fillRect(70, 260, canvas.width - 180, 26);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 4;
@@ -336,41 +329,13 @@ function makeLabelTexture() {
   return texture;
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-  const words = text.split(" ");
-  let line = "";
-  for (let n = 0; n < words.length; n += 1) {
-    const testLine = `${line}${words[n]} `;
-    const metrics = ctx.measureText(testLine);
-    if (metrics.width > maxWidth && n > 0) {
-      ctx.fillText(line, x, y);
-      line = `${words[n]} `;
-      y += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-  ctx.fillText(line, x, y);
-}
-
 async function checkSupport() {
   if (!navigator.xr || !navigator.xr.isSessionSupported) {
-    showUnsupported("이 브라우저는 WebXR을 지원하지 않습니다.");
-    return;
+    return false;
   }
 
   const supported = await navigator.xr.isSessionSupported("immersive-ar");
-  if (!supported) {
-    showUnsupported("AR 모드를 지원하지 않는 기기/브라우저입니다.");
-    return;
-  }
-  setStatus("카메라 권한을 허용해 주세요.");
-}
-
-function showUnsupported(message) {
-  ui.unsupported.textContent = message;
-  ui.unsupported.classList.remove("hidden");
-  setStatus("AR을 지원하지 않는 환경입니다.");
+  return Boolean(supported);
 }
 
 function showSiteWindow() {
@@ -406,9 +371,12 @@ function updateOverlay(currentCamera) {
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
 }
 
-function setStatus(text) {
-  if (!ui.status) return;
-  ui.status.textContent = text;
+function fallbackToInlineSite() {
+  if (overlayEl.classList.contains("fullscreen")) return;
+  overlayEl.classList.add("fullscreen");
+  overlayEl.classList.remove("hidden");
+  renderer.setAnimationLoop(null);
+  renderer.domElement.style.display = "none";
 }
 
 // Provide an ARButton for browsers that require the built-in element.
