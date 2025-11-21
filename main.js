@@ -375,6 +375,10 @@ function updateOverlay(currentCamera) {
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
 }
 
+function showUnsupported(message) {
+  showMessage(message);
+}
+
 function showMessage(text) {
   if (!ui.message) return;
   ui.message.textContent = text;
