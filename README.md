@@ -1,11 +1,11 @@
 # InFocus AR Hologram
 
-간단한 WebXR AR 페이지입니다. 모바일 브라우저에서 카메라를 켜고 바닥을 인식한 뒤 탭하면 InFocus 사이트가 홀로그램 패널처럼 떠서 보입니다.
+간단한 WebXR AR 페이지입니다. 주소에 접속하면 곧바로 AR 세션을 시도하고, 카메라를 허용하면 바닥을 인식해 InFocus 사이트가 홀로그램 패널처럼 떠서 보입니다. 기기가 제스처를 요구하면 화면을 한 번 탭해 주세요.
 
 ## 실행 방법
 - HTTPS 환경에서 열어야 합니다. 로컬에서 테스트할 땐 `npx http-server -S -C cert.pem -K key.pem .` 처럼 임시 인증서를 사용하거나, `npm create vite@latest`의 `--https` dev 서버를 활용하세요.
-- 모바일 Chrome/Edge(Android) 또는 Safari 17+(iOS)에서 접속 후 `AR 시작` 버튼을 누르면 카메라 권한을 요청합니다.
-- 바닥에 나타난 링 reticle 위에서 탭하면 홀로그램 창이 배치되고, 상단 패널의 iframe에서 실제 사이트가 로드됩니다.
+- 모바일 Chrome/Edge(Android) 또는 Safari 17+(iOS)에서 접속하면 자동으로 카메라 권한을 요청합니다. “제스처 필요”가 뜨면 화면을 한 번 탭하세요.
+- 바닥이 인식되면 자동으로 홀로그램이 배치되고 iframe에 실제 사이트가 로드됩니다. 화면을 다시 탭하면 위치를 새로 잡습니다.
 
 ## 참고 및 한계
 - `TARGET_URL`은 `main.js` 상단에서 변경할 수 있습니다. Mixed content를 피하기 위해 HTTP 주소는 자동으로 HTTPS로 치환합니다.

@@ -5,17 +5,14 @@ const TARGET_URL = "https://www.infocus1.co.kr/";
 const HOLOGRAM_SIZE = { width: 1.2, height: 0.72 };
 
 const ui = {
-  startAr: document.getElementById("start-ar"),
-  openSite: document.getElementById("open-site"),
-  closeWindow: document.getElementById("close-window"),
   siteWindow: document.getElementById("site-window"),
   siteFrame: document.getElementById("site-frame"),
   unsupported: document.getElementById("unsupported"),
+  status: document.getElementById("status-pill"),
 };
 
 ui.siteFrame.src = TARGET_URL.replace("http://", "https://");
-ui.openSite.addEventListener("click", () => window.open(TARGET_URL, "_blank"));
-ui.closeWindow.addEventListener("click", () => hideSiteWindow());
+setStatus("AR 준비 중...");
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -57,25 +54,25 @@ const state = {
   hitTestSource: null,
   referenceSpace: null,
   hologram: null,
+  autoplacePending: true,
 };
 
-const tempMatrix = new THREE.Matrix4();
 const tempVec = new THREE.Vector3();
 const tempPos = new THREE.Vector3();
 const overlayEl = ui.siteWindow;
 
-ui.startAr.addEventListener("click", startAR);
 window.addEventListener("resize", onWindowResize);
 
 checkSupport();
+attemptAutoStart();
 
 async function startAR() {
   if (!navigator.xr) {
     showUnsupported("이 기기는 WebXR AR을 지원하지 않습니다.");
-    return;
+    return false;
   }
 
-  if (state.session) return;
+  if (state.session) return true;
 
   try {
     const sessionInit = {
@@ -86,10 +83,32 @@ async function startAR() {
 
     const session = await navigator.xr.requestSession("immersive-ar", sessionInit);
     onSessionStarted(session);
+    return true;
   } catch (err) {
     console.error("AR 세션 시작 실패", err);
+    if (err && typeof err.message === "string" && err.message.toLowerCase().includes("gesture")) {
+      state.needsGesture = true;
+      setStatus("화면을 한 번 탭해 카메라를 켜주세요.");
+      waitForUserGesture();
+      return false;
+    }
     showUnsupported("AR 세션을 시작할 수 없습니다. HTTPS 환경과 호환 기기를 확인하세요.");
+    return false;
   }
+}
+
+function attemptAutoStart() {
+  setStatus("카메라 권한 요청 중...");
+  startAR();
+}
+
+function waitForUserGesture() {
+  const handler = () => {
+    window.removeEventListener("pointerdown", handler);
+    setStatus("AR 시작 중...");
+    startAR();
+  };
+  window.addEventListener("pointerdown", handler, { once: true });
 }
 
 function onWindowResize() {
@@ -110,6 +129,7 @@ async function onSessionStarted(session) {
   state.hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   overlayEl.classList.add("hidden");
+  setStatus("바닥을 인식 중... 기기 앞쪽을 천천히 움직여 주세요.");
   renderer.setAnimationLoop(onXRFrame);
 }
 
@@ -125,30 +145,14 @@ function onSessionEnded() {
     state.hologram = null;
   }
   renderer.setAnimationLoop(null);
+  setStatus("AR 세션이 종료되었습니다. 다시 시작하려면 화면을 탭하세요.");
+  state.autoplacePending = true;
+  waitForUserGesture();
 }
 
 function onSelect() {
   if (!reticle.visible) return;
-
-  if (!state.hologram) {
-    state.hologram = createHologram();
-    reticle.matrix.decompose(
-      state.hologram.position,
-      state.hologram.quaternion,
-      state.hologram.scale
-    );
-    state.hologram.userData.baseY = state.hologram.position.y;
-    scene.add(state.hologram);
-    showSiteWindow();
-  } else {
-    // Move hologram to new spot if already placed.
-    reticle.matrix.decompose(
-      state.hologram.position,
-      state.hologram.quaternion,
-      state.hologram.scale
-    );
-    state.hologram.userData.baseY = state.hologram.position.y;
-  }
+  placeHologramFromReticle();
 }
 
 function onXRFrame(time, frame) {
@@ -166,6 +170,10 @@ function onXRFrame(time, frame) {
       if (pose) {
         reticle.matrix.fromArray(pose.transform.matrix);
       }
+      if (state.autoplacePending) {
+        placeHologramFromReticle();
+        state.autoplacePending = false;
+      }
     } else {
       reticle.visible = false;
     }
@@ -174,6 +182,24 @@ function onXRFrame(time, frame) {
   animateHologram(time);
   updateOverlay(screenCamera());
   renderer.render(scene, camera);
+}
+
+function placeHologramFromReticle() {
+  if (!reticle.visible) return;
+
+  if (!state.hologram) {
+    state.hologram = createHologram();
+    scene.add(state.hologram);
+  }
+
+  reticle.matrix.decompose(
+    state.hologram.position,
+    state.hologram.quaternion,
+    state.hologram.scale
+  );
+  state.hologram.userData.baseY = state.hologram.position.y;
+  showSiteWindow();
+  setStatus("홈페이지를 둘러보세요. 패널을 탭하면 위치를 다시 잡습니다.");
 }
 
 function animateHologram(time = 0) {
@@ -336,13 +362,15 @@ async function checkSupport() {
   const supported = await navigator.xr.isSessionSupported("immersive-ar");
   if (!supported) {
     showUnsupported("AR 모드를 지원하지 않는 기기/브라우저입니다.");
+    return;
   }
+  setStatus("카메라 권한을 허용해 주세요.");
 }
 
 function showUnsupported(message) {
   ui.unsupported.textContent = message;
   ui.unsupported.classList.remove("hidden");
-  ui.startAr.disabled = true;
+  setStatus("AR을 지원하지 않는 환경입니다.");
 }
 
 function showSiteWindow() {
@@ -376,6 +404,11 @@ function updateOverlay(currentCamera) {
   const scale = THREE.MathUtils.clamp(1 / Math.max(distance, 0.1), 0.35, 1.2);
 
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function setStatus(text) {
+  if (!ui.status) return;
+  ui.status.textContent = text;
 }
 
 // Provide an ARButton for browsers that require the built-in element.

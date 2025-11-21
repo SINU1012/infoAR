@@ -80,33 +80,25 @@ h1 {
   line-height: 1.5;
 }
 
-.actions {
-  pointer-events: auto;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-button {
-  cursor: pointer;
+#status-pill {
+  justify-self: start;
+  align-self: start;
+  padding: 10px 14px;
   border: 1px solid var(--border);
-  background: linear-gradient(90deg, rgba(90, 240, 255, 0.12), rgba(122, 240, 201, 0.1));
-  color: var(--text);
-  padding: 12px 18px;
   border-radius: 12px;
-  font-size: 15px;
-  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  background: rgba(12, 17, 24, 0.6);
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  pointer-events: auto;
+  width: fit-content;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.glass {
+  background: rgba(12, 17, 24, 0.6);
+  border: 1px solid var(--border);
   backdrop-filter: blur(12px);
-}
-
-button:hover {
-  transform: translateY(-1px);
-  border-color: rgba(90, 240, 255, 0.7);
-  box-shadow: 0 10px 30px rgba(0, 200, 255, 0.08);
-}
-
-.ghost {
-  background: rgba(255, 255, 255, 0.04);
 }
 
 #site-window {
@@ -114,51 +106,33 @@ button:hover {
   top: 20%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(90vw, 520px);
-  height: min(60vh, 420px);
-  background: #05090f;
+  width: min(90vw, 540px);
+  height: min(62vh, 460px);
+  background: rgba(5, 9, 15, 0.8);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 32px rgba(90, 240, 255, 0.25);
   pointer-events: auto;
   z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
-.window-chrome {
-  height: 46px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 0 14px;
-  background: linear-gradient(90deg, rgba(90, 240, 255, 0.1), rgba(122, 240, 201, 0.07));
-  color: var(--muted);
-  font-size: 13px;
-  letter-spacing: 0.02em;
-}
-
-.window-chrome .pulse {
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: var(--accent);
-  box-shadow: 0 0 10px rgba(90, 240, 255, 0.9);
-  animation: pulse 1.8s ease-in-out infinite;
-}
-
-.window-chrome button {
-  border-radius: 10px;
-  padding: 6px 10px;
-  height: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.2);
+#site-window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(90, 240, 255, 0.08), transparent 40%),
+              radial-gradient(circle at 80% 10%, rgba(122, 240, 201, 0.08), transparent 42%);
+  pointer-events: none;
 }
 
 iframe {
   width: 100%;
-  height: calc(100% - 46px);
+  height: 100%;
   border: none;
+  position: relative;
+  z-index: 1;
 }
 
 .hidden {
