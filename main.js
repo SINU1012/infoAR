@@ -64,8 +64,6 @@ window.addEventListener("resize", onWindowResize);
   const supported = await checkSupport();
   if (supported) {
     attemptAutoStart();
-  } else {
-    fallbackToInlineSite();
   }
 })();
 
@@ -93,7 +91,6 @@ async function startAR() {
       waitForUserGesture();
       return false;
     }
-    fallbackToInlineSite();
     return false;
   }
 }
@@ -369,14 +366,6 @@ function updateOverlay(currentCamera) {
   const scale = THREE.MathUtils.clamp(1 / Math.max(distance, 0.1), 0.35, 1.2);
 
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
-}
-
-function fallbackToInlineSite() {
-  if (overlayEl.classList.contains("fullscreen")) return;
-  overlayEl.classList.add("fullscreen");
-  overlayEl.classList.remove("hidden");
-  renderer.setAnimationLoop(null);
-  renderer.domElement.style.display = "none";
 }
 
 // Provide an ARButton for browsers that require the built-in element.

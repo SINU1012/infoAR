@@ -5,7 +5,7 @@
 ## 실행 방법
 - HTTPS 환경에서 열어야 합니다. 로컬에서 테스트할 땐 `npx http-server -S -C cert.pem -K key.pem .` 처럼 임시 인증서를 사용하거나, `npm create vite@latest`의 `--https` dev 서버를 활용하세요.
 - 모바일 Chrome/Edge(Android) 또는 Safari 17+(iOS)에서 접속하면 자동으로 카메라 권한을 요청합니다. “제스처 필요”가 뜨면 화면을 한 번 탭하세요.
-- 바닥이 인식되면 자동 배치합니다. 화면을 탭하면 위치를 다시 잡습니다. AR을 지원하지 않는 경우엔 자동으로 일반 iframe 뷰로 대체됩니다.
+- 바닥이 인식되면 자동 배치합니다. 화면을 탭하면 위치를 다시 잡습니다. AR을 지원하지 않는 경우에는 화면에 아무 것도 띄우지 않습니다(별도 iframe 보기 없음).
 
 ## 참고 및 한계
 - `TARGET_URL`은 `main.js` 상단에서 변경할 수 있습니다. Mixed content를 피하기 위해 HTTP 주소는 자동으로 HTTPS로 치환합니다.
