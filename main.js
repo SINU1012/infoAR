@@ -53,6 +53,7 @@ const state = {
   referenceSpace: null,
   hologram: null,
   autoplacePending: true,
+  lastHitMs: performance.now(),
 };
 
 const tempVec = new THREE.Vector3();
@@ -66,7 +67,7 @@ window.addEventListener("resize", onWindowResize);
   if (supported) {
     attemptAutoStart();
   } else {
-    showMessage("이 기기에서는 AR이 지원되지 않습니다. iOS Safari 17+ 또는 Android Chrome에서 열어주세요.");
+    fallbackToInline("이 기기에서는 AR이 지원되지 않습니다. iOS Safari 17+ 또는 Android Chrome 최신 버전에서 열어주세요.");
   }
 })();
 
@@ -130,7 +131,7 @@ async function onSessionStarted(session) {
   state.hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   overlayEl.classList.add("hidden");
-  hideMessage();
+  showMessage("바닥을 비추며 천천히 움직여 주세요. 인식이 안 되면 자동으로 배치됩니다.");
   renderer.setAnimationLoop(onXRFrame);
 }
 
@@ -171,6 +172,7 @@ function onXRFrame(time, frame) {
       if (pose) {
         reticle.matrix.fromArray(pose.transform.matrix);
       }
+      state.lastHitMs = performance.now();
       if (state.autoplacePending) {
         placeHologramFromReticle();
         state.autoplacePending = false;
@@ -178,6 +180,11 @@ function onXRFrame(time, frame) {
     } else {
       reticle.visible = false;
     }
+  }
+
+  // If hit-test is failing for a while, place in front of camera as fallback.
+  if (!state.hologram && performance.now() - state.lastHitMs > 4500) {
+    placeHologramInFront();
   }
 
   animateHologram(time);
@@ -200,6 +207,31 @@ function placeHologramFromReticle() {
   );
   state.hologram.userData.baseY = state.hologram.position.y;
   showSiteWindow();
+  hideMessage();
+}
+
+function placeHologramInFront(distance = 1.2) {
+  // Place hologram directly in front of the viewer when no hit is available.
+  const cam = screenCamera();
+  if (!cam) return;
+
+  if (!state.hologram) {
+    state.hologram = createHologram();
+    scene.add(state.hologram);
+  }
+
+  const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(cam.quaternion).normalize();
+  const pos = new THREE.Vector3().copy(cam.position).addScaledVector(forward, distance);
+
+  state.hologram.position.copy(pos);
+  // Align panel to face camera horizontally.
+  const lookAt = new THREE.Vector3().copy(cam.position);
+  lookAt.y = pos.y;
+  state.hologram.lookAt(lookAt);
+  state.hologram.userData.baseY = state.hologram.position.y;
+
+  showSiteWindow();
+  hideMessage();
 }
 
 function animateHologram(time = 0) {
@@ -373,6 +405,14 @@ function updateOverlay(currentCamera) {
   const scale = THREE.MathUtils.clamp(1 / Math.max(distance, 0.1), 0.35, 1.2);
 
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function fallbackToInline(message) {
+  showMessage(message);
+  overlayEl.classList.add("fullscreen");
+  overlayEl.classList.remove("hidden");
+  renderer.setAnimationLoop(null);
+  renderer.domElement.style.display = "none";
 }
 
 function showUnsupported(message) {

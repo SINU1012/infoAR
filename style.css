@@ -62,6 +62,15 @@ iframe {
   z-index: 1;
 }
 
+.fullscreen {
+  top: 0;
+  left: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  transform: none !important;
+  border-radius: 0;
+}
+
 .pill {
   position: fixed;
   top: 14px;
