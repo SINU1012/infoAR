@@ -7,6 +7,7 @@ const HOLOGRAM_SIZE = { width: 1.2, height: 0.72 };
 const ui = {
   siteWindow: document.getElementById("site-window"),
   siteFrame: document.getElementById("site-frame"),
+  message: document.getElementById("message"),
 };
 
 ui.siteFrame.src = TARGET_URL.replace("http://", "https://");
@@ -64,6 +65,8 @@ window.addEventListener("resize", onWindowResize);
   const supported = await checkSupport();
   if (supported) {
     attemptAutoStart();
+  } else {
+    showMessage("이 기기에서는 AR이 지원되지 않습니다. iOS Safari 17+ 또는 Android Chrome에서 열어주세요.");
   }
 })();
 
@@ -88,6 +91,7 @@ async function startAR() {
   } catch (err) {
     console.error("AR 세션 시작 실패", err);
     if (err && typeof err.message === "string" && err.message.toLowerCase().includes("gesture")) {
+      showMessage("화면을 한 번 탭해 AR을 시작하세요.");
       waitForUserGesture();
       return false;
     }
@@ -105,6 +109,7 @@ function waitForUserGesture() {
     startAR();
   };
   window.addEventListener("pointerdown", handler, { once: true });
+  showMessage("화면을 한 번 탭해 AR을 시작하세요.");
 }
 
 function onWindowResize() {
@@ -125,6 +130,7 @@ async function onSessionStarted(session) {
   state.hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
 
   overlayEl.classList.add("hidden");
+  hideMessage();
   renderer.setAnimationLoop(onXRFrame);
 }
 
@@ -142,6 +148,7 @@ function onSessionEnded() {
   renderer.setAnimationLoop(null);
   state.autoplacePending = true;
   waitForUserGesture();
+  showMessage("AR 세션이 종료되었습니다. 다시 시작하려면 화면을 탭하세요.");
 }
 
 function onSelect() {
@@ -366,6 +373,17 @@ function updateOverlay(currentCamera) {
   const scale = THREE.MathUtils.clamp(1 / Math.max(distance, 0.1), 0.35, 1.2);
 
   overlayEl.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+function showMessage(text) {
+  if (!ui.message) return;
+  ui.message.textContent = text;
+  ui.message.classList.remove("hidden");
+}
+
+function hideMessage() {
+  if (!ui.message) return;
+  ui.message.classList.add("hidden");
 }
 
 // Provide an ARButton for browsers that require the built-in element.
